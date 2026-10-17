@@ -1,0 +1,10 @@
+# Keil 编译输出
+Objects/
+Listings/
+
+# uVision 用户相关文件（GUI 布局 / 调试设置，含用户名）
+*.uvguix.*
+*.scvd
+
+# 当前电脑的 VS Code 配置及日志
+.vscode
