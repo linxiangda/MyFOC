@@ -337,7 +337,7 @@
               <MiscControls></MiscControls>
               <Define>GD32F30X_HD,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>.\User;.\Libraries\CMSIS\GD\GD32F30x\Include;.\Libraries\CMSIS;.\Libraries\CMSIS\GD\GD32F30x\Source\ARM;.\Libraries\GD32F30x_standard_peripheral\GD32F30x_Lib\Head;.\Libraries\GD32F30x_standard_peripheral\GD32F30x_Lib\Inc;.\CODE\APP;.\CODE\BSP;.\CODE\PER;.\CODE\Utils;.\CODE</IncludePath>
+              <IncludePath>.\User;.\Libraries\CMSIS\GD\GD32F30x\Include;.\Libraries\CMSIS;.\Libraries\CMSIS\GD\GD32F30x\Source\ARM;.\Libraries\GD32F30x_standard_peripheral\GD32F30x_Lib\Head;.\Libraries\GD32F30x_standard_peripheral\GD32F30x_Lib\Inc;.\CODE\APP;.\CODE\Driver;.\CODE\Algorithm;.\CODE\BSP</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -409,7 +409,7 @@
             <File>
               <FileName>Mydef.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\CODE\Mydef.h</FilePath>
+              <FilePath>.\User\Mydef.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -674,8 +674,18 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>APP</GroupName>
+          <GroupName>CODE/APP</GroupName>
           <Files>
+            <File>
+              <FileName>Control.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\CODE\APP\Control.c</FilePath>
+            </File>
+            <File>
+              <FileName>Control.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\CODE\APP\Control.h</FilePath>
+            </File>
             <File>
               <FileName>FOC.c</FileName>
               <FileType>1</FileType>
@@ -716,55 +726,45 @@
               <FileType>5</FileType>
               <FilePath>.\CODE\APP\VOFA.h</FilePath>
             </File>
-            <File>
-              <FileName>Control.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\CODE\APP\Control.c</FilePath>
-            </File>
-            <File>
-              <FileName>Control.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\CODE\APP\Control.h</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>PER</GroupName>
+          <GroupName>CODE/Driver</GroupName>
           <Files>
             <File>
               <FileName>AS5047P.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\CODE\PER\AS5047P.c</FilePath>
+              <FilePath>.\CODE\Driver\AS5047P.c</FilePath>
             </File>
             <File>
               <FileName>AS5047P.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\CODE\PER\AS5047P.h</FilePath>
+              <FilePath>.\CODE\Driver\AS5047P.h</FilePath>
             </File>
             <File>
               <FileName>DRV8323.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\CODE\PER\DRV8323.c</FilePath>
+              <FilePath>.\CODE\Driver\DRV8323.c</FilePath>
             </File>
             <File>
               <FileName>DRV8323.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\CODE\PER\DRV8323.h</FilePath>
+              <FilePath>.\CODE\Driver\DRV8323.h</FilePath>
             </File>
             <File>
               <FileName>WS2812B.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\CODE\PER\WS2812B.c</FilePath>
+              <FilePath>.\CODE\Driver\WS2812B.c</FilePath>
             </File>
             <File>
               <FileName>WS2812B.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\CODE\PER\WS2812B.h</FilePath>
+              <FilePath>.\CODE\Driver\WS2812B.h</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>BSP</GroupName>
+          <GroupName>CODE/BSP</GroupName>
           <Files>
             <File>
               <FileName>ADC.c</FileName>
@@ -777,6 +777,16 @@
               <FilePath>.\CODE\BSP\ADC.h</FilePath>
             </File>
             <File>
+              <FileName>Flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\CODE\BSP\Flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>Flash.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\CODE\BSP\Flash.h</FilePath>
+            </File>
+            <File>
               <FileName>GPIO.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\CODE\BSP\GPIO.c</FilePath>
@@ -785,26 +795,6 @@
               <FileName>GPIO.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\CODE\BSP\GPIO.h</FilePath>
-            </File>
-            <File>
-              <FileName>Serial.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\CODE\BSP\Serial.c</FilePath>
-            </File>
-            <File>
-              <FileName>Serial.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\CODE\BSP\Serial.h</FilePath>
-            </File>
-            <File>
-              <FileName>Timer.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\CODE\BSP\Timer.c</FilePath>
-            </File>
-            <File>
-              <FileName>Timer.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\CODE\BSP\Timer.h</FilePath>
             </File>
             <File>
               <FileName>PWM.c</FileName>
@@ -817,6 +807,16 @@
               <FilePath>.\CODE\BSP\PWM.h</FilePath>
             </File>
             <File>
+              <FileName>Serial.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\CODE\BSP\Serial.c</FilePath>
+            </File>
+            <File>
+              <FileName>Serial.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\CODE\BSP\Serial.h</FilePath>
+            </File>
+            <File>
               <FileName>SPI.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\CODE\BSP\SPI.c</FilePath>
@@ -827,39 +827,39 @@
               <FilePath>.\CODE\BSP\SPI.h</FilePath>
             </File>
             <File>
-              <FileName>Flash.c</FileName>
+              <FileName>Timer.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\CODE\BSP\Flash.c</FilePath>
+              <FilePath>.\CODE\BSP\Timer.c</FilePath>
             </File>
             <File>
-              <FileName>Flash.h</FileName>
+              <FileName>Timer.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\CODE\BSP\Flash.h</FilePath>
+              <FilePath>.\CODE\BSP\Timer.h</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>Utils</GroupName>
+          <GroupName>CODE/Algorithm</GroupName>
           <Files>
             <File>
               <FileName>filter.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\CODE\Utils\filter.c</FilePath>
+              <FilePath>.\CODE\Algorithm\filter.c</FilePath>
             </File>
             <File>
               <FileName>filter.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\CODE\Utils\filter.h</FilePath>
+              <FilePath>.\CODE\Algorithm\filter.h</FilePath>
             </File>
             <File>
               <FileName>math_util.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\CODE\Utils\math_util.c</FilePath>
+              <FilePath>.\CODE\Algorithm\math_util.c</FilePath>
             </File>
             <File>
               <FileName>math_util.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\CODE\Utils\math_util.h</FilePath>
+              <FilePath>.\CODE\Algorithm\math_util.h</FilePath>
             </File>
           </Files>
         </Group>
