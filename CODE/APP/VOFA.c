@@ -1,4 +1,6 @@
 #include "VOFA.h"
+#include "string.h"
+#include "stdio.h"
 /**
  * @brief 转换参数为VOFAjustFloat格式发送
  * @param float val
@@ -30,9 +32,32 @@ void sendJustFloatPacket(void)
 	sendFloat(foc.target_current);
 	sendFloat(foc.Iq);
 	
-	sendFloat(0);
+	sendFloat(0.0f);
 	sendFloat(foc.Id);
     
     uint8_t tail[4] = {0x00, 0x00, 0x80, 0x7f};
     Serial_SendArray(tail, 4);
+}
+
+void sendFireWater(void){
+    int len;
+    char packet[128];
+
+    len = snprintf(
+            packet, sizeof(packet),
+            "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
+            foc.target_position,
+            (as5047p.angle_revolution * DIR),
+            foc.target_velocity,
+            (as5047p.velocity * DIR),
+            foc.target_current,
+            foc.Iq,
+            0.0f,
+            foc.Id
+        );
+
+    if (len > 0 && (size_t)len < sizeof(packet)){
+        Serial_SendString(packet);
+    }   
+
 }

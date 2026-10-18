@@ -46,8 +46,8 @@ void position_loop(uint8_t once){
 	i++;
 	if(i % 100 == 0){
 		i = 0;
-		if(foc.target_position > POS_LIMIT_MAX) foc.target_position = POS_LIMIT_MAX;
-    	if(foc.target_position < POS_LIMIT_MIN) foc.target_position = POS_LIMIT_MIN;
+		// if(foc.target_position > POS_LIMIT_MAX) foc.target_position = POS_LIMIT_MAX;
+    	// if(foc.target_position < POS_LIMIT_MIN) foc.target_position = POS_LIMIT_MIN;
 		PID_Compute(&position_pid,foc.target_position,as5047p.angle_revolution*DIR,Ts_positionLoop);
 	}
 	if(i % 10 == 0){

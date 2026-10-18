@@ -4,5 +4,6 @@
 #include "main.h"
 
 void sendJustFloatPacket(void);
+void sendFireWater(void);
 
 #endif

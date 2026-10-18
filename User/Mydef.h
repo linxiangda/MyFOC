@@ -1,9 +1,15 @@
 #ifndef _MYDEF_H
 #define _MYDEF_H
 
-#define DIR -1 //电机方向/编码器方向
-#define PP 14  //电机极对数
-#define G 8.0f //减速比
+/* GIM6010-8 */
+// #define DIR -1 //电机方向/编码器方向
+// #define PP 14  //电机极对数
+// #define G 8.0f //减速比
+
+/* M0603A_111 */
+#define DIR 1 //电机方向/编码器方向
+#define PP 10  //电机极对数
+#define G 1.0f //减速比
 
 #define _PI 3.14159265359f
 #define _2PI 6.28318530718f

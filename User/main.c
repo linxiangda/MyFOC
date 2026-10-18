@@ -26,10 +26,16 @@ int main(void){
 	ADC0_Init();//ADC0初始化
 	
 	//PID初始化
+	/* GIM6010-8 */
+	// PID_Init(&position_pid, 5, 0, 0.1, 80);
+	// PID_Init(&velocity_pid, 0.2, 0.3, 0, 8.0);
+	// PID_Init(&Iq_pid, 4, 40, 0, 12);
+	// PID_Init(&Id_pid, 4, 40, 0, 12);
+	/* M0603A_111 */
 	PID_Init(&position_pid, 5, 0, 0.1, 80);
-	PID_Init(&velocity_pid, 0.2, 0.3, 0, 8.0);
-	PID_Init(&Iq_pid, 4, 40, 0, 12);
-	PID_Init(&Id_pid, 4, 40, 0, 12);
+	PID_Init(&velocity_pid, 0.1, 1.5, 0, 8.0);
+	PID_Init(&Iq_pid, 10, 15, 0, 12);
+	PID_Init(&Id_pid, 10, 15, 0, 12);
 	
 	//定时器启用
 	timer_enable(TIMER0);
@@ -58,7 +64,8 @@ int main(void){
 		if(time_main >= 20){//20ms执行
 			time_main = 0;
 			if(motor_mode != Motor_MODE_NONE && motor_mode != Motor_MODE_FAULT){
-				sendJustFloatPacket();//vofa发送程序，在闭环情况下发送,稍微费时
+				// sendJustFloatPacket();//vofa发送程序，在闭环情况下发送,稍微费时
+				sendFireWater();
 			}
 			Error_Check();//错误检测，不费时
 		}
