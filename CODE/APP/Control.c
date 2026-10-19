@@ -154,6 +154,10 @@ void Error_Check(void){
 		motor_mode = Motor_MODE_NONE;
 		Serial_SendString("no calibration\n");
 	}
+	if (error_type == CAN_Mode_Set_error){
+		error_type = No_error;
+		Serial_SendString("CAN mode set error\n");
+	}
 	if (gpio_input_bit_get(DRV_nFAULT_PORT,DRV_nFAULT_PIN) == 0) {
 		error_type = DRV_error;
 		motor_mode = Motor_MODE_FAULT;

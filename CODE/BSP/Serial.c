@@ -150,7 +150,7 @@ void Serial_Parse(char *str){
 	
 	if (strcmp(cmd, "m") == 0) {
 		int m = (int)val;
-		if (m >= 0 && m <= 5){
+		if (m >= 0 && m <= 4){
 			motor_mode = (MOTOR_Mode)m;
 			Change_once=1;//改一次模式，执行一次FOC_CloseOut()/FOC_OpenOut()
 			PID_Reset(&position_pid);//改一次模式 PID复位

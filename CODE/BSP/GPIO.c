@@ -9,6 +9,9 @@
 void GPIO_Init(void){	
 	gpio_init(Serial_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, Serial_TX_PIN);  	  //PB10(TX)配置为复用推挽输出
 	gpio_init(Serial_PORT, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, Serial_RX_PIN);  //PB11(RX)配置为浮空输入
+
+	gpio_init(CAN_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, CAN_TX_PIN); //PA12(CAN_RX)配置为上拉输入
+	gpio_init(CAN_PORT, GPIO_MODE_IPU, GPIO_OSPEED_50MHZ, Serial_RX_PIN);   //PA11(CAN_TX)配置为复用推挽输出
 	
 	gpio_init(PWM_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, PWM_PHASE_A_PIN);
     gpio_init(PWM_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, PWM_PHASE_B_PIN);

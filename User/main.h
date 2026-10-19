@@ -12,6 +12,7 @@
 
 #include "GPIO.h"
 #include "Serial.h"
+#include "CAN.h"
 #include "Timer.h"
 #include "PWM.h"
 #include "ADC.h"

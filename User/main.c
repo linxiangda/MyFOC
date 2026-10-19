@@ -17,6 +17,7 @@ int main(void){
 	delay_1ms(500);//等1s，启动电压稳定
     GPIO_Init();//GPIO初始化
 	USART2_Init();//串口初始化
+	CAN0_Init();//CAN初始化
 	TIMER5_Init();//定时器5初始化，1ms，先不使能
 	TIMER0_PWM_Init();//定时器1/PWM初始化，50us/20khz，先不使能
 	

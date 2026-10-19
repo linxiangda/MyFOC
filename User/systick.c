@@ -25,6 +25,7 @@ void rcu_config(void)
 	
 	rcu_periph_clock_enable(RCU_ADC0);									//开启ADC0时钟
 
+    rcu_periph_clock_enable(RCU_CAN0);
 	rcu_periph_clock_enable(RCU_USART2);    //开启USART2时钟
 	rcu_periph_clock_enable(RCU_DMA0);      // 开启DMA0时钟
 	rcu_periph_clock_enable(RCU_AF);        // 开启复用功能时钟	

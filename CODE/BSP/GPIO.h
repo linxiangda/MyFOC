@@ -9,6 +9,11 @@ void GPIO_Init(void);
 #define Serial_RX_PIN   GPIO_PIN_11
 #define Serial_PORT     GPIOB
 
+//CAN引脚
+#define CAN_TX_PIN   GPIO_PIN_12
+#define CAN_RX_PIN   GPIO_PIN_11
+#define CAN_PORT     GPIOA
+
 //DRV使能引脚
 #define DRV_nFAULT_PIN  GPIO_PIN_2
 #define DRV_nFAULT_PORT GPIOB
