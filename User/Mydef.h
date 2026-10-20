@@ -1,30 +1,45 @@
 #ifndef _MYDEF_H
 #define _MYDEF_H
 
+#define MOTOR_LEG_WHEEL 0 //0为足，1为轮
 #define MOTOR_LEFT_RIGHT 0 //0为左，1为右
-#define MOTOR_LEG_WHEEL 1 //0为足，1为轮
 
 #if MOTOR_LEG_WHEEL == 0
 /* GIM6010-8 */
+#if MOTOR_LEFT_RIGHT == 0
+//left
 #define DIR -1 //电机方向/编码器方向
 #define PP 14  //电机极对数
 #define G 8.0f //减速比
-#if MOTOR_LEFT_RIGHT == 0
-
-//left
-#define POS_LIMIT_MAX -1.33
-#define POS_LIMIT_MIN -5.00
+#define POS_LIMIT_MAX -0.16625
+#define POS_LIMIT_MIN -0.625
+#define ControlID 0x101
 #else
 //right
-#define POS_LIMIT_MAX -0.49
-#define POS_LIMIT_MIN -4.97
+#define DIR -1 //电机方向/编码器方向
+#define PP 14  //电机极对数
+#define G 8.0f //减速比
+#define POS_LIMIT_MAX -0.06125
+#define POS_LIMIT_MIN -0.62125
+#define ControlID 0x102
 #endif
 
 #else
 /* M0603A_111 */
+#if MOTOR_LEFT_RIGHT == 0
+//left
 #define DIR 1 //电机方向/编码器方向
 #define PP 10  //电机极对数
 #define G 1.0f //减速比
+#define ControlID 0x101
+#else
+//right
+#define DIR -1 //电机方向/编码器方向
+#define PP 10  //电机极对数
+#define G 1.0f //减速比
+#define ControlID 0x102
+#endif
+
 #endif
 
 #define _PI 3.14159265359f

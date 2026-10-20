@@ -108,6 +108,6 @@ void AS5047P_updata(void){
     cnt = 0;
     as5047p.velocity = (as5047p.angle_revolution - angle_pre) / (10.0f * Ts_T0);
     angle_pre = as5047p.angle_revolution;
-    as5047p.velocity = LowPassFilter1(as5047p.velocity, Ts_T0, 0.98f); 
+    as5047p.velocity = LowPassFilter1(as5047p.velocity, 10.0f * Ts_T0, 0.98f); 
   }
 }
