@@ -1,7 +1,5 @@
 #include "Timer.h"
-#include "TimerTask.h"
 
-uint16_t time_main = 0;
 /**
  * @brief 定时器5初始化
  * @param none
@@ -26,32 +24,3 @@ void TIMER5_Init(void){
 //	timer_enable(TIMER5);
 }
 
-/**
- * @brief 定时器5中断服务函数
- * @param none
- * @return none
- * @attention none
- */
-void TIMER5_IRQHandler(void){
-	static uint16_t tim_count = 0;
-	if(timer_interrupt_flag_get(TIMER5, TIMER_INT_UP) == SET){
-		time_main++;
-		tim_count++;
-		Timer_1ms_Test();
-		if(tim_count % 5 == 0){
-			Timer_5ms_Test();
-		}
-		if(tim_count % 10 == 0){
-			Timer_10ms_Test();
-		}
-		if(tim_count % 20 == 0){
-			Timer_20ms_Test();
-		}
-		if(tim_count % 1000 == 0){
-			Timer_1s_Test();
-			tim_count=0;
-		}
-    
-		timer_interrupt_flag_clear(TIMER5, TIMER_INT_FLAG_UP);
-	}
-}

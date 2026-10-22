@@ -2,6 +2,10 @@
 #define _WS2812B_H
 
 #include "main.h"
+#include "Control.h"
+//WS2812BÒý½Å
+#define WS2812B_PIN GPIO_PIN_8
+#define WS2812B_PORT GPIOB
 
 #define LEDNUM          1
 #define LEDBUFLEN       (LEDNUM * 24 + 240)//240*1.25=300
@@ -29,5 +33,5 @@ void WS2812B_SetColor(uint32_t color);
 void WS2812B_Clear(void);
 void WS2812B_SetRGB(uint8_t r, uint8_t g, uint8_t b);
 void WS2812B_Update(void);
-void RGB_Set(void);
+void RGB_Set(MOTOR_Mode motor_mode);
 #endif

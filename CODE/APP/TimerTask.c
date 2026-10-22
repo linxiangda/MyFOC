@@ -1,54 +1,52 @@
 #include "TimerTask.h"
-/**
- * @brief 定时器0，PWM顶点中断
- * @attention 母线电压ADC Iq/Id计算 编码器读取 电角度计算 控制程序
- */
-void Timer0_Test(void){
-	if(calibration_running) return;
-	ADC_Get();         
-	AS5047P_updata();
-	electricalAngle(as5047p.angle);
-    Get_I(foc.electric_angle);//放电角度获取后
-	Control();
-}
-/**
- * @brief 定时器5中断 1ms
- * @attention RGB灯计时
- */
-void Timer_1ms_Test(void){
-	RGB_Set();
-}
+#include "Control.h"
+#include "WS2812B.h"
 
-/**
- * @brief 定时器5中断 5ms
- * @attention 
- */
-void Timer_5ms_Test(void){
+extern volatile  MOTOR_Mode motor_mode;
+extern uint16_t time_main;
+extern void CAN_SendFeedback(void);
+// /**
+//  * @brief 定时器0中断服务函数
+//  * @param none
+//  * @return none
+//  * @attention none
+//  */
+// void TIMER0_UP_IRQHandler(void){
+//     if(timer_interrupt_flag_get(TIMER0, TIMER_INT_FLAG_UP) == SET){
 
-
-}	
-/**
- * @brief 定时器5中断 10ms
- * @attention 
- */
-void Timer_10ms_Test(void){
 		
-}	
-
+// 		timer_interrupt_flag_clear(TIMER0, TIMER_INT_FLAG_UP);
+//     }
+// }
 /**
- * @brief 定时器5中断 20ms
- * @attention 
+ * @brief 定时器5中断服务函数
+ * @param none
+ * @return none
+ * @attention none
  */
-void Timer_20ms_Test(void){
-
+void TIMER5_IRQHandler(void){
+	static uint16_t tim_count = 0;
+	if(timer_interrupt_flag_get(TIMER5, TIMER_INT_UP) == SET){
+		time_main++;
+		tim_count++;
+		RGB_Set(motor_mode);
+		if(tim_count % 5 == 0){
+			CAN_SendFeedback();
+		}
+		if(tim_count % 10 == 0){
+			
+		}
+		if(tim_count % 20 == 0){
+			
+		}
+		if(tim_count % 1000 == 0){
+			
+			tim_count=0;
+		}
+		timer_interrupt_flag_clear(TIMER5, TIMER_INT_FLAG_UP);
+	}
 }
-/**
- * @brief 定时器5中断 1s
- * @attention
- */
-void Timer_1s_Test(void){
 
-	
-}
+
 
 

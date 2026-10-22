@@ -1,24 +1,22 @@
 #include "WS2812B.h"
+#include "Control.h"
 
 uint16_t LEDBuf[LEDBUFLEN];// PWM数据缓冲区，存储每个位对应的占空比值
 volatile uint32_t LED_RGB = COLOR_WHITE;// 当前LED颜色值，默认蓝色
 
-volatile MOTOR_Mode led_mode = Motor_MODE_NONE;
-volatile uint16_t led_timer = 0;                        // 剩余毫秒数
-volatile uint8_t led_phase = 0;                         // 0=亮灯阶段, 1=灭灯阶段
-
-//PWM频率=定时器时钟/(period+1)/(prescaler+1)。对应定时器溢出周期的倒数(定时器更新频率)
-//=120Mhz/150=800khz                   1.25us
-//PWM分辨率=1/(period+1)
-//=1/150
-//PWM占空比=pulse/(period+1)。当CNT<=CCR，输出1，当CNT>CCR，输出0。
-//=pulse/150
 /**
   * @brief  WS2812B初始化函数
   * @note   配置TIMER3的PWM输出和DMA传输，用于驱动WS2812B LED
   * @retval 无
   */
 void WS2812B_Init(void){	
+	gpio_init(WS2812B_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, WS2812B_PIN);   //WS2812B,PB8配置为复用推挽输出
+	//PWM频率=定时器时钟/(period+1)/(prescaler+1)。对应定时器溢出周期的倒数(定时器更新频率)
+	//=120Mhz/150=800khz                   1.25us
+	//PWM分辨率=1/(period+1)
+	//=1/150
+	//PWM占空比=pulse/(period+1)。当CNT<=CCR，输出1，当CNT>CCR，输出0。
+	//=pulse/150
 	timer_deinit(TIMER3);                                       //TIMER3复位
 	timer_parameter_struct TIMER3_StructInit;										//定义定时器初始化结构体
 	TIMER3_StructInit.alignedmode = TIMER_COUNTER_EDGE;					//对齐模式：边沿对齐模式
@@ -159,7 +157,7 @@ void WS2812B_Clear(void){
 /**
   * @brief  无阻塞发送颜色
   */
-void RGB_Set(void){
+void RGB_Set(MOTOR_Mode motor_mode){
 	static uint16_t time = 2000;
 	time--;
 	if(time == 0){
@@ -171,10 +169,7 @@ void RGB_Set(void){
 		WS2812B_Update();
 		return;
 	}
-
-	led_mode = motor_mode;
-
-	switch(led_mode){
+	switch(motor_mode){
 		case Motor_MODE_FAULT:
 			WS2812B_SetColor(COLOR_RED);
 			break;

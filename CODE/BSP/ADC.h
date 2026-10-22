@@ -1,15 +1,16 @@
 #ifndef __ADC_H__
 #define __ADC_H__
 
-#include "main.h"
-
-#define SHUNT_RESISTENCE	0.005f						
-#define V_SCALE (19.0000f * 3.3f / 4095.0f)     					
-#define I_SCALE (3.3f / 4095.0f) / SHUNT_RESISTENCE / 40.0f		
+//ADC
+#define ADC0_IN0_PIN    GPIO_PIN_0
+#define ADC0_IN1_PIN    GPIO_PIN_1
+#define ADC0_IN2_PIN    GPIO_PIN_2
+#define ADC0_IN3_PIN    GPIO_PIN_3
+#define ADC0_PORT       GPIOA
 
 void ADC0_Init(void);
 void ADC_Calibrate(void);
-void ADC_Get(void);
+void ADC_Get(float data[4]);
 
 #endif
 

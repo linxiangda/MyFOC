@@ -1,14 +1,15 @@
 #include "Serial.h"
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
+
 #define RX_BUF_LEN 64
 #define RX_DMA_LEN 128
 static char rx_buf[RX_BUF_LEN];
-static volatile uint8_t rx_ready = 0;// 待解析
 
 static volatile uint8_t rx_dma_buf[RX_DMA_LEN];
 static volatile uint16_t rx_dma_head = 0;
+
+extern void Serial_Parse(char *str);
 /**
  * @brief USART2初始化
  * @param none
@@ -17,6 +18,9 @@ static volatile uint16_t rx_dma_head = 0;
 			  输出配置DMA：
  */
 void USART2_Init(void){	
+	gpio_init(Serial_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, Serial_TX_PIN);  	  //PB10(TX)配置为复用推挽输出
+	gpio_init(Serial_PORT, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, Serial_RX_PIN);  //PB11(RX)配置为浮空输入
+
 	usart_deinit(USART2);					  			//复位USART2
 	usart_baudrate_set(USART2, 115200);		  			//设置USART2波特率：
 	usart_transmit_config(USART2, USART_TRANSMIT_ENABLE);//使能USART2发送器
@@ -71,7 +75,7 @@ void USART2_IRQHandler(void){
 	if(usart_interrupt_flag_get(USART2, USART_INT_FLAG_IDLE)){
 		(void)usart_data_receive(USART2);
 		usart_interrupt_flag_clear(USART2, USART_INT_FLAG_IDLE);
-		rx_ready = 1;
+		Serial_ProcessCommand();
 	}
 }
 /**
@@ -81,99 +85,26 @@ void USART2_IRQHandler(void){
  * @attention none
  */
 void Serial_ProcessCommand(void){
-	if(!rx_ready)return;
-
-	rx_ready = 0;
-
 	uint16_t tail = (uint16_t)(RX_DMA_LEN - dma_transfer_number_get(DMA0, DMA_CH2)); 
 	if(tail >= RX_DMA_LEN){
 		tail = 0;
 	}
 
-	uint16_t rx_index = 0;
+	static uint16_t rx_index = 0;
 	while(rx_dma_head != tail){//处理到的位置（读指针）！= 写到的最新位置（写指针）
-		char c = (char)rx_dma_buf[rx_dma_head];
-		rx_dma_head = (uint16_t)((rx_dma_head + 1) % RX_DMA_LEN);
+		char c = (char)rx_dma_buf[rx_dma_head];//c为读到的位置的值
+		rx_dma_head = (uint16_t)((rx_dma_head + 1) % RX_DMA_LEN);//读指针向后
 
-		if(c == '\n' || rx_index >= RX_BUF_LEN - 1){
+		if(c == '\n' || rx_index >= RX_BUF_LEN - 1){//读到\n或者到队尾，截断buff
 			rx_buf[rx_index] = '\0';
 			rx_index = 0;	
 			Serial_Parse(rx_buf);
-		}else{
+		}else{//没读到尾巴，读入buff
 			rx_buf[rx_index++] = c;
 		}
 	}
 }
-/**
- * @brief 调参服务函数
- * @param none
- * @return none
- * @attention none
- */
-typedef struct {
-    const char *name;
-    float *value;
-} ParamMap;
 
-static const ParamMap param_map[] = {
-    {"kpp", &position_pid.Kp},
-    {"kip", &position_pid.Ki},
-    {"kdp", &position_pid.Kd},
-
-    {"kpv", &velocity_pid.Kp},
-    {"kiv", &velocity_pid.Ki},
-    {"kdv", &velocity_pid.Kd},
-
-    {"kpq", &Iq_pid.Kp},
-    {"kiq", &Iq_pid.Ki},
-    {"kdq", &Iq_pid.Kd},
-	
-    {"kpd", &Id_pid.Kp},
-    {"kid", &Id_pid.Ki},
-    {"kdd", &Id_pid.Kd},
-
-    {"p", &foc.target_position},
-    {"v", &foc.target_velocity},
-    {"c", &foc.target_current},
-};
-
-void Serial_Parse(char *str){
-    char cmd[4] = {0};
-    float val = 0.0f;
-	
-    if (sscanf(str, "%3[^0123456789+- ]%f", cmd, &val) != 2) {
-        return;
-    }
-    for (int i = 0; cmd[i]; i++) {
-        cmd[i] = (char)tolower((unsigned char)cmd[i]);
-    }
-	
-	if (strcmp(cmd, "m") == 0) {
-		int m = (int)val;
-		if (m >= 0 && m <= 4){
-			motor_mode = (MOTOR_Mode)m;
-			Change_once=1;//改一次模式，执行一次FOC_CloseOut()/FOC_OpenOut()
-			PID_Reset(&position_pid);//改一次模式 PID复位
-			PID_Reset(&velocity_pid);
-			PID_Reset(&Iq_pid);
-			PID_Reset(&Id_pid);
-			foc.target_position=0;//改一次设定值复位
-			foc.target_velocity=0;
-			foc.target_current=0;
-		}
-		return;
-	}
-    for (size_t i = 0; i < sizeof(param_map) / sizeof(param_map[0]); i++) {
-        if (strcmp(cmd, param_map[i].name) == 0) {
-            *param_map[i].value = val;
-			PID_Set_integral_limit(&position_pid);//改设置时，算一下新的积分限幅
-			PID_Set_integral_limit(&velocity_pid);
-			PID_Set_integral_limit(&Iq_pid);
-			PID_Set_integral_limit(&Id_pid);
-            return;
-        }
-    }
-}
 /**
   * @brief DMA发送
   * @param uint8_t *buf, uint16_t len

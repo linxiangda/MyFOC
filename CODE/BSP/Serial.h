@@ -3,9 +3,12 @@
 
 #include "main.h"
 
+#define Serial_TX_PIN   GPIO_PIN_10
+#define Serial_RX_PIN   GPIO_PIN_11
+#define Serial_PORT     GPIOB
+
 void USART2_Init(void);
 void Serial_ProcessCommand(void);
-void Serial_Parse(char *str);
 
 void Serial_SendByte(uint8_t Byte);
 void Serial_SendArray(uint8_t *Array,uint16_t Length);

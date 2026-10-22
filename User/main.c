@@ -1,6 +1,37 @@
 #include "main.h"
 
-int aa = 0;
+#include "Mydef.h"
+#include <ctype.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "GPIO.h"
+#include "Serial.h"
+#include "CAN.h"
+#include "Timer.h"
+#include "PWM.h"
+#include "ADC.h"
+#include "SPI.h"
+#include "Flash.h"
+
+#include "PID.h"
+#include "FOC.h"
+#include "VOFA.h"
+#include "Control.h"
+
+#include "AS5047P.h"
+#include "DRV8323.h"
+#include "WS2812B.h"
+uint16_t time_main = 0;
+extern FOCStruct foc;
+extern AS5047P as5047p;
+extern volatile MOTOR_Mode motor_mode;
+extern Error_type error_type;
+
+extern PID position_pid;
+extern PID velocity_pid;
+extern PID Iq_pid;
+extern PID Id_pid;
 int main(void){
 	systick_config();
 //	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;  // 使能 DWT
@@ -28,17 +59,17 @@ int main(void){
 	
 	//PID初始化
 	#if MOTOR_LEG_WHEEL == 0
-		/* GIM6010-8 */
-		PID_Init(&position_pid, 5, 0, 0.1, 80);
-		PID_Init(&velocity_pid, 0.2, 0.3, 0, 8.0);
-		PID_Init(&Iq_pid, 4, 40, 0, 12);
-		PID_Init(&Id_pid, 4, 40, 0, 12);
+		/* GIM6010-8：腿电机 */
+		PID_Init(&position_pid, 10.0f, 0.0f, 0.1f, 80.0f);
+		PID_Init(&velocity_pid, 0.1f, 0.3f, 0.0f, 8.0f);
+		PID_Init(&Iq_pid,       2.0f, 10.0f, 0.0f, 12.0f);
+		PID_Init(&Id_pid,       2.0f, 10.0f, 0.0f, 12.0f);//单电机最大功率在3/2*12*8=144W左右
 	#else
-		/* M0603A_111 */
-		PID_Init(&position_pid, 5, 0, 0.1, 80);
-		PID_Init(&velocity_pid, 0.1, 1.5, 0, 8.0);
-		PID_Init(&Iq_pid, 10, 15, 0, 12);
-		PID_Init(&Id_pid, 10, 15, 0, 12);
+		/* M0603A_111：轮电机 */
+		PID_Init(&position_pid, 10.0f, 0.0f, 0.1f, 80.0f);
+		PID_Init(&velocity_pid, 0.05f, 1.5f, 0.0f, 8.0f);
+		PID_Init(&Iq_pid,       10.0f, 30.0f, 0.0f, 12.0f);
+		PID_Init(&Id_pid,       10.0f, 30.0f, 0.0f, 12.0f);
 	#endif
 	
 	
@@ -54,18 +85,10 @@ int main(void){
 	
 	//Flash读入，若已校准过，可直接运行
 	if (Flash_Cal_Read(&foc.zero_electric_angle)) {
-        Calibration_flag = 1;  
+        foc.calibration_flag = 1;  
     }
 	while(1){
-		if(motor_mode == Motor_MODE_Calibration){//主函数中校准，校准期间关闭定时器中断，上电后只用校准一次
-			calibration_running = 1; 
-			FOC_OpenOut();//FOC输出开启
-			calibration();//开环校准程序
-			Calibration_flag = 1;//校准成功一次，标志位置1
-			motor_mode = Motor_MODE_NONE;//校准后置为Motor_MODE_NONE
-			calibration_running	= 0;		
-		}
-		
+		Start_calibration();
 		if(time_main >= 20){//20ms执行
 			time_main = 0;
 			if(motor_mode != Motor_MODE_NONE && motor_mode != Motor_MODE_FAULT){
@@ -74,7 +97,171 @@ int main(void){
 			}
 			Error_Check();//错误检测，不费时
 		}
-		Serial_ProcessCommand();//串口数据解析
 	}
 }
 
+/**
+ * @brief 调参服务函数
+ * @param none
+ * @return none
+ * @attention none
+ */
+typedef struct {
+    const char *name;
+    float *value;
+} ParamMap;
+
+static const ParamMap param_map[] = {
+    {"kpp", &position_pid.Kp},
+    {"kip", &position_pid.Ki},
+    {"kdp", &position_pid.Kd},
+
+    {"kpv", &velocity_pid.Kp},
+    {"kiv", &velocity_pid.Ki},
+    {"kdv", &velocity_pid.Kd},
+
+    {"kpq", &Iq_pid.Kp},
+    {"kiq", &Iq_pid.Ki},
+    {"kdq", &Iq_pid.Kd},
+	
+    {"kpd", &Id_pid.Kp},
+    {"kid", &Id_pid.Ki},
+    {"kdd", &Id_pid.Kd},
+
+    {"p", &foc.target_position},
+    {"v", &foc.target_velocity},
+    {"c", &foc.target_current},
+};
+
+void Serial_Parse(char *str){
+    char cmd[4] = {0};
+    float val = 0.0f;
+	
+    if (sscanf(str, "%3[^0123456789+- ]%f", cmd, &val) != 2) {//期望匹配两项
+        return;
+    }
+    for (int i = 0; cmd[i]; i++) {//指令不区分大小写
+        cmd[i] = (char)tolower((unsigned char)cmd[i]);
+    }
+	
+	if (strcmp(cmd, "m") == 0) {
+		uint8_t mode = (uint8_t)val;
+		if(mode > 4) {
+			error_type = Mode_Set_error;
+			return;
+		}
+		/* 关中断设置模式 */
+		uint32_t primask = __get_PRIMASK();
+    	__disable_irq();
+		if (motor_mode != (MOTOR_Mode)mode){
+			motor_mode = (MOTOR_Mode)mode;
+			foc.change_once_set=1;//改一次模式，Control执行一次FOC_CloseOut()/FOC_OpenOut()
+		}
+		__DMB();
+    	__set_PRIMASK(primask);
+		return;
+	}
+    for (uint16_t i = 0; i < sizeof(param_map) / sizeof(param_map[0]); i++) {
+        if (strcmp(cmd, param_map[i].name) == 0) {
+			*param_map[i].value = val;
+			return;
+        }
+    }
+}
+
+void CAN_Parse(uint8_t *data){
+    const uint8_t *order = &data[MOTOR_LEG_WHEEL * 4];
+    uint8_t mode = order[0];
+    if (mode > 4) {
+        error_type = Mode_Set_error;
+        return;
+    }
+
+    int32_t raw = ((int32_t)order[1] << 16)
+            | ((int32_t)order[2] << 8)
+            |  (int32_t)order[3];
+			
+    if (raw & 0x00800000) {
+		raw -= 0x01000000;
+	}
+	float controldata = raw / 100000.0f;
+
+	/* 关中断设置模式、数值 */
+	uint32_t primask = __get_PRIMASK();
+	__disable_irq();
+
+    if (motor_mode != (MOTOR_Mode)mode) {
+		motor_mode = (MOTOR_Mode)mode;
+        foc.change_once_set = 1;//改一次模式，执行一次FOC_CloseOut()/FOC_OpenOut()
+    }
+	    if(motor_mode == Motor_MODE_C){
+        foc.target_current=controldata;
+        foc.target_velocity=0;
+        foc.target_position=0;  
+    }
+    if(motor_mode == Motor_MODE_V){
+        foc.target_current=0;
+        foc.target_velocity=controldata;
+        foc.target_position=0;  
+    }
+    if(motor_mode == Motor_MODE_P){
+        foc.target_current=0;
+        foc.target_velocity=0;
+        foc.target_position=controldata;  
+    }
+
+	__DMB();
+	__set_PRIMASK(primask);
+    
+}
+
+void CAN_SendFeedback(void)
+{
+	/* 对要发送数据进行缓存，避免被打断 */
+    uint8_t data1[8] = {0};
+    uint8_t data2[8] = {0};
+    float iq;
+    float velocity;
+    float position;
+    uint8_t mode;
+    uint8_t error;
+	uint8_t calibrated;
+	uint8_t calibrating;
+
+    uint32_t primask = __get_PRIMASK();
+    __disable_irq();
+
+    iq       = foc.Iq;
+    velocity = as5047p.velocity;
+    position = as5047p.angle_revolution;
+    mode  = (uint8_t)motor_mode;
+    error = (uint8_t)error_type;
+    calibrated = (uint8_t)foc.calibration_flag;
+	calibrating = (uint8_t)foc.calibration_running;
+
+    __DMB();
+    __set_PRIMASK(primask);
+
+    velocity = -(velocity / G * DIR);
+    position = position / G * DIR;
+	#if MOTOR_LEG_WHEEL == 0
+		position = LEG_EXTEND_SIGN * (position - LEG_RETRACT_POS_RAD);
+	#endif
+
+    memcpy(&data1[0], &iq,       4);
+    memcpy(&data1[4], &velocity, 4);
+
+    memcpy(&data2[0], &position, 4);
+    data2[4] = mode;
+    data2[5] = error;
+    data2[6] = calibrated;
+    data2[7] = calibrating;
+
+    if (CAN0_TransmitData(0x201 + MOTOR_LEFT_RIGHT * 2 + MOTOR_LEG_WHEEL, data1, 8) == CAN_NOMAILBOX) {
+        return;
+    }
+
+    if (CAN0_TransmitData(0x201 + MOTOR_LEFT_RIGHT * 2 + MOTOR_LEG_WHEEL + 0x10u, data2, 8) == CAN_NOMAILBOX) {
+        return;
+    }
+}

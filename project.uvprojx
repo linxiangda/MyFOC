@@ -697,16 +697,6 @@
               <FilePath>.\CODE\APP\FOC.h</FilePath>
             </File>
             <File>
-              <FileName>PID.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\CODE\APP\PID.c</FilePath>
-            </File>
-            <File>
-              <FileName>PID.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\CODE\APP\PID.h</FilePath>
-            </File>
-            <File>
               <FileName>TimerTask.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\CODE\APP\TimerTask.c</FilePath>
@@ -870,6 +860,16 @@
               <FileName>math_util.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\CODE\Algorithm\math_util.h</FilePath>
+            </File>
+            <File>
+              <FileName>PID.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\CODE\Algorithm\PID.c</FilePath>
+            </File>
+            <File>
+              <FileName>PID.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\CODE\Algorithm\PID.h</FilePath>
             </File>
           </Files>
         </Group>

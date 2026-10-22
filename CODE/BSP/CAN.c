@@ -1,12 +1,16 @@
 #include "CAN.h"
 #include <string.h>
-#define Q19_SCALE 524288.0f
-can_receive_message_struct CAN0_receive_message;
+#include "Mydef.h"
 
+can_receive_message_struct CAN0_receive_message;
+extern void CAN_Parse(uint8_t *data);
 /**
  * @brief CAN0初始化
  */
 void CAN0_Init(void){
+    gpio_init(CAN_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, CAN_TX_PIN); //PA12(CAN_RX)配置为上拉输入
+	gpio_init(CAN_PORT, GPIO_MODE_IPU, GPIO_OSPEED_50MHZ, CAN_RX_PIN);   //PA11(CAN_TX)配置为复用推挽输出
+
     can_deinit(CAN0);
     can_parameter_struct CAN_StructInit;
     CAN_StructInit.working_mode = CAN_NORMAL_MODE;
@@ -46,7 +50,7 @@ void CAN0_Init(void){
  * @param uint8_t len 数据长度
  * @return none
  */
-void CAN0_TransmitData(uint32_t ID, uint8_t *data, uint8_t len){
+uint8_t CAN0_TransmitData(uint32_t ID, uint8_t *data, uint8_t len){
     can_trasnmit_message_struct CAN_Transmit_StructInit;
     CAN_Transmit_StructInit.tx_ff = CAN_FF_STANDARD;
     CAN_Transmit_StructInit.tx_ft = CAN_FT_DATA;
@@ -57,7 +61,7 @@ void CAN0_TransmitData(uint32_t ID, uint8_t *data, uint8_t len){
     }
     CAN_Transmit_StructInit.tx_dlen = len;
     
-    can_message_transmit(CAN0, &CAN_Transmit_StructInit);
+    return can_message_transmit(CAN0, &CAN_Transmit_StructInit);
 
 }
 
@@ -98,60 +102,4 @@ void USBD_LP_CAN0_RX0_IRQHandler(void){
         }
         
     }
-}
-
-void CAN_Parse(uint8_t *data){
-    const uint8_t *order = &data[MOTOR_LEG_WHEEL * 4];
-    uint8_t mode = (order[0] >> 5);
-    if(mode > 4) {
-        error_type = CAN_Mode_Set_error;
-        return;
-    }
-    if (motor_mode != (MOTOR_Mode)mode) {
-        Change_once = 1;//改一次模式，执行一次FOC_CloseOut()/FOC_OpenOut()
-        PID_Reset(&position_pid);//改一次模式 PID复位
-        PID_Reset(&velocity_pid);
-        PID_Reset(&Iq_pid);
-        PID_Reset(&Id_pid);
-    }
-
-    uint32_t raw = ((uint32_t)(order[0] & 0x1F) << 24)
-            | ((uint32_t)order[1] << 16)
-            | ((uint32_t)order[2] << 8)
-            | ((uint32_t)order[3]);
-
-    int32_t q = (int32_t)raw;
-    if (raw & 0x10000000u)
-        q -= 0x20000000;
-
-    float controldata = Decode_Q9_19(q);
-
-    motor_mode = (MOTOR_Mode)mode;
-    if(motor_mode == Motor_MODE_C){
-        foc.target_current=controldata;
-        foc.target_velocity=0;
-        foc.target_position=0;  
-    }
-    if(motor_mode == Motor_MODE_V){
-        foc.target_current=0;
-        foc.target_velocity=controldata;
-        foc.target_position=0;  
-    }
-    if(motor_mode == Motor_MODE_P){
-        foc.target_current=0;
-        foc.target_velocity=0;
-        foc.target_position=controldata;  
-    }
-    
-}
-
-int32_t Encode_Q9_19(float value)
-{
-    if (value >= 512.0f) return 268435455;      // 29位补码最大正数
-    if (value <= -512.0f) return -268435456;     // 29位补码最小负数
-    return (int32_t)(value * Q19_SCALE);
-}
-
-float Decode_Q9_19(int32_t value){
-    return ((float)value / Q19_SCALE);
 }

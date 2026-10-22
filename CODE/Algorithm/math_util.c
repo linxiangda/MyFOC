@@ -1,7 +1,8 @@
 #include "math_util.h"
-#include "Mydef.h"
 #include <math.h>
 
+#define _PI 3.14159265359f
+#define _2PI 6.28318530718f
 
 // 归一化角度到 [0,2PI]
 float normalizeAngle(float angle){

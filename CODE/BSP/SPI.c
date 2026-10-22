@@ -6,6 +6,12 @@
  * @attention 16位数据，下降沿采样
  */
 void SPI0_Init(void){
+	/* 引脚初始化 */
+	gpio_init(ENC_CS_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, ENC_CS_PIN);
+	gpio_init(ENC_SCK_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, ENC_SCK_PIN);
+	gpio_init(ENC_MISO_PORT, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, ENC_MISO_PIN);
+	gpio_init(ENC_MOSI_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, ENC_MOSI_PIN);
+
     /* 硬件重映射 */
 	gpio_pin_remap_config(GPIO_SWJ_SWDPENABLE_REMAP, ENABLE);
 	gpio_pin_remap_config(GPIO_SPI0_REMAP, ENABLE);
@@ -30,6 +36,12 @@ void SPI0_Init(void){
  * @attention 16位数据，下降沿采样
  */
 void SPI1_Init(void){
+	/* 引脚初始化 */
+	gpio_init(DRV_CS_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, DRV_CS_PIN);
+	gpio_init(DRV_SCK_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, DRV_SCK_PIN);
+	gpio_init(DRV_MISO_PORT, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, DRV_MISO_PIN);
+	gpio_init(DRV_MOSI_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, DRV_MOSI_PIN);
+
     /* SPI配置 */
 	spi_parameter_struct spi_initpara;
 	spi_struct_para_init(&spi_initpara);

@@ -1,14 +1,26 @@
 #include "ADC.h"
-
-uint16_t ADC_buff[1];          // 母线电压，DMA 循环刷新
+#include "main.h"
+#include "Control.h"
+#include "Serial.h"
+uint16_t ADC_buff[1]; // 母线电压，DMA 循环刷新
+static volatile float ADC_data[4]; // 数据暂存
 
 float offset_ia = 0;
 float offset_ib = 0;
 float offset_ic = 0;
 float offset_V = 0;
 
+#define SHUNT_RESISTENCE	0.005f						
+#define V_SCALE (19.0000f * 3.3f / 4095.0f)     					
+#define I_SCALE (3.3f / 4095.0f) / SHUNT_RESISTENCE / 40.0f		
+
 void ADC0_Init(void){
 	rcu_adc_clock_config(RCU_CKADC_CKAPB2_DIV6);   // 20MHz
+
+	gpio_init(ADC0_PORT, GPIO_MODE_AIN, GPIO_OSPEED_50MHZ, ADC0_IN0_PIN);     //PA0(ADC0_IN0)配置为模拟输入
+	gpio_init(ADC0_PORT, GPIO_MODE_AIN, GPIO_OSPEED_50MHZ, ADC0_IN1_PIN);     //PA1(ADC0_IN1)配置为模拟输入
+	gpio_init(ADC0_PORT, GPIO_MODE_AIN, GPIO_OSPEED_50MHZ, ADC0_IN2_PIN);     //PA2(ADC0_IN2)配置为模拟输入
+	gpio_init(ADC0_PORT, GPIO_MODE_AIN, GPIO_OSPEED_50MHZ, ADC0_IN3_PIN);     //PA3(ADC0_IN3)配置为模拟输入
 
 	adc_deinit(ADC0);
 	adc_resolution_config(ADC0, ADC_RESOLUTION_12B);   //12位分辨率
@@ -61,17 +73,6 @@ void ADC0_Init(void){
 	adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
 }
 
-/* 注入组采完：硬件同步，控制中断里零等待 */
-void ADC0_1_IRQHandler(void){
-	if(adc_interrupt_flag_get(ADC0, ADC_INT_FLAG_EOIC) != RESET){
-		adc_interrupt_flag_clear(ADC0, ADC_INT_FLAG_EOIC);
-		foc.Ia = (float)(adc_inserted_data_read(ADC0, ADC_INSERTED_CHANNEL_0) - offset_ia) * I_SCALE;
-		foc.Ib = (float)(adc_inserted_data_read(ADC0, ADC_INSERTED_CHANNEL_1) - offset_ib) * I_SCALE;
-		foc.Ic = -foc.Ia - foc.Ib;	
-	
-	}	
-}
-
 /* 零电流偏移校准：必须在 timer_enable(TIMER0) 之后调用 */
 void ADC_Calibrate(void){
 	const int times = 1000;
@@ -94,6 +95,20 @@ void ADC_Calibrate(void){
 	Serial_SendString("\n");
 }
 
-void ADC_Get(void){
-	foc.voltage_power_supply = ADC_buff[0] * V_SCALE;
+void ADC_Get(float data[4]){
+	ADC_data[3] = ADC_buff[0] * V_SCALE;
+	for(uint8_t i=0;i<4;i++){
+		data[i] = ADC_data[i];
+	}
+}
+
+/* 注入组采完：硬件同步，控制中断里零等待 */
+void ADC0_1_IRQHandler(void){
+	if(adc_interrupt_flag_get(ADC0, ADC_INT_FLAG_EOIC) != RESET){
+		adc_interrupt_flag_clear(ADC0, ADC_INT_FLAG_EOIC);
+		ADC_data[0] = (float)(adc_inserted_data_read(ADC0, ADC_INSERTED_CHANNEL_0) - offset_ia) * I_SCALE;
+		ADC_data[1] = (float)(adc_inserted_data_read(ADC0, ADC_INSERTED_CHANNEL_1) - offset_ib) * I_SCALE;
+		ADC_data[2] = -ADC_data[0] - ADC_data[1];	
+		Control_Loop();
+	}	
 }

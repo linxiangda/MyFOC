@@ -1,4 +1,7 @@
 #include "DRV8323.h"
+#include "GPIO.h"
+#include "SPI.h"
+#include "Serial.h"
 /**
  * @brief DRV8323≥ı ºªØ
  * @param none
@@ -6,7 +9,7 @@
  * @attention »ÙDRV∏¥Œª ß∞‹£¨±®¥Ì£¨ø®À¿≥Ã–Ú
  */
 void DRV8323_Init(void){
-	gpio_bit_reset(DRV_EN_PORT, DRV_EN_PIN);
+	DRV_EN_reset();
 	SPI1_Init();
 	if (0 != DRV8323_reset())
 	{
@@ -185,9 +188,9 @@ void DRV8323_calibrate(void){
  */
 int DRV8323_reset(void){
     //DRV8323 config
-    gpio_bit_reset(DRV_EN_PORT, DRV_EN_PIN);
+    DRV_EN_reset();
     delay_1us(20);
-    gpio_bit_set(DRV_EN_PORT, DRV_EN_PIN);
+    DRV_EN_set();
     delay_1us(20);
 	
     DRV8323_calibrate();

@@ -10,10 +10,9 @@ typedef struct{
   float full_rotations;
   float velocity;
 }AS5047P;
-float getAngle(void);
-float getAngle_revolution(void);
-float getVelocity(void);
-void AS5047P_updata(void);
+float getAngle(AS5047P *encode);
+float getAngle_revolution(AS5047P *encode);
+void AS5047P_updata(AS5047P *encode, float ts);
 void AS5047P_Init(void);
-extern AS5047P as5047p;
+
 #endif

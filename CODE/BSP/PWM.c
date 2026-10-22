@@ -1,5 +1,5 @@
 #include "PWM.h"
-#include "TimerTask.h"
+#include "math_util.h"
 uint16_t timer_period = 0;
 /**
  * @brief 定时器0PWM初始化
@@ -12,6 +12,11 @@ void TIMER0_PWM_Init(void){
     uint32_t pwm_freq = 20000;  //PWM频率20kHz
     uint32_t prescaler = 0;     //时基单元分频
     timer_period = (timer_clock / (prescaler + 1) / pwm_freq /2) - 1;
+
+	gpio_init(PWM_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, PWM_PHASE_A_PIN);
+    gpio_init(PWM_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, PWM_PHASE_B_PIN);
+    gpio_init(PWM_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, PWM_PHASE_C_PIN);	
+
 	/*定时器配置*/                                                        
 	timer_deinit(PWM_TIMER);                                                         //TIMER0复位
 	timer_parameter_struct TIMER_StructInit;										 //定义定时器初始化结构体
@@ -20,7 +25,7 @@ void TIMER0_PWM_Init(void){
 	TIMER_StructInit.clockdivision = TIMER_CKDIV_DIV1;								 //时钟分频
 	TIMER_StructInit.period = timer_period;												 //自动重装载值(计数周期)
 	TIMER_StructInit.prescaler = prescaler;											 //预分频器值
-	TIMER_StructInit.repetitioncounter = 0;                                          //重复计数器不重复
+	TIMER_StructInit.repetitioncounter = 1;                                          //重复计数器不重复
 	timer_init(PWM_TIMER, &TIMER_StructInit);                                        //TIMER0初始化
 	
 	/*初始化通道输出比较模式*/
@@ -50,23 +55,12 @@ void TIMER0_PWM_Init(void){
 	timer_channel_output_pulse_value_config(PWM_TIMER, TIMER_CH_3, timer_period - 20); //接近顶点时触发ADC电流采集
 	
 	/*定时器0中断初始化*/
-	nvic_irq_enable(TIMER0_UP_IRQn, 1, 0);
-	timer_interrupt_flag_clear(PWM_TIMER, TIMER_INT_FLAG_UP);
-	timer_interrupt_enable(PWM_TIMER, TIMER_INT_UP);
-//	timer_enable(PWM_TIMER);												         //使能TIMER0，计数器开始计数
+	// nvic_irq_enable(TIMER0_UP_IRQn, 1, 0);
+	// timer_interrupt_flag_clear(PWM_TIMER, TIMER_INT_FLAG_UP);
+ 	// timer_interrupt_enable(PWM_TIMER, TIMER_INT_UP);
+// timer_enable(PWM_TIMER);												         //使能TIMER0，计数器开始计数
 }
-/**
- * @brief 定时器0中断服务函数
- * @param none
- * @return none
- * @attention none
- */
-void TIMER0_UP_IRQHandler(void){
-    if(timer_interrupt_flag_get(TIMER0, TIMER_INT_FLAG_UP) == SET){
-		Timer0_Test();
-		timer_interrupt_flag_clear(TIMER0, TIMER_INT_FLAG_UP);
-    }
-}
+
 
 /**
  * @brief PWM输出启用
@@ -89,17 +83,30 @@ void Pwm_DisableOutput(void){
 }
 
 /**
+ * @brief PWM输出复位
+ * @param none
+ * @return none
+ * @attention none
+ */
+void Pwm_DataReset(void){
+	TIMER_CH2CV(PWM_TIMER) = (timer_period >> 1);
+	TIMER_CH1CV(PWM_TIMER) = (timer_period >> 1);
+	TIMER_CH0CV(PWM_TIMER) = (timer_period >> 1);
+}
+
+/**
  * @brief 设置三项PWM输出
+ * @param float voltage 总线电压
  * @param float duty1
  * @param float duty2
  * @param float duty3
  * @return none
  * @attention none
  */
-void Pwm_Set(float duty1,float duty2,float duty3){
-	float dc_a = constrain(duty1 / foc.voltage_power_supply, 0.0f , 1.0f );
-	float dc_b = constrain(duty2 / foc.voltage_power_supply, 0.0f , 1.0f );
-	float dc_c = constrain(duty3 / foc.voltage_power_supply, 0.0f , 1.0f );
+void Pwm_Set(float voltage,float duty1,float duty2,float duty3){
+	float dc_a = constrain(duty1 / voltage, 0.0f , 1.0f );
+	float dc_b = constrain(duty2 / voltage, 0.0f , 1.0f );
+	float dc_c = constrain(duty3 / voltage, 0.0f , 1.0f );
 	
     timer_channel_output_pulse_value_config(PWM_TIMER, PWM_CHA, (uint16_t)(dc_a * timer_period));
     timer_channel_output_pulse_value_config(PWM_TIMER, PWM_CHB, (uint16_t)(dc_b * timer_period));

@@ -1,6 +1,13 @@
 #include "VOFA.h"
 #include "string.h"
 #include "stdio.h"
+
+#include "Serial.h"
+#include "FOC.h"
+#include "AS5047P.h"
+#include "Mydef.h"
+extern FOCStruct foc;
+extern AS5047P as5047p;
 /**
  * @brief 转换参数为VOFAjustFloat格式发送
  * @param float val
@@ -43,13 +50,17 @@ void sendFireWater(void){
     int len;
     char packet[128];
 
+    float position_show = (as5047p.angle_revolution / G * DIR);
+    #if MOTOR_LEG_WHEEL == 0
+        position_show = LEG_EXTEND_SIGN * (as5047p.angle_revolution / G * DIR - LEG_RETRACT_POS_RAD);
+    #endif
     len = snprintf(
             packet, sizeof(packet),
-            "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
+            "%.6f,%.6f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
             foc.target_position,
-            (as5047p.angle_revolution / G * DIR),
+            position_show,
             foc.target_velocity,
-            (as5047p.velocity / G * DIR),
+            -(as5047p.velocity / G * DIR),
             foc.target_current,
             foc.Iq,
             0.0f,

@@ -1,9 +1,4 @@
 #include "PID.h"
-
-PID position_pid;
-PID velocity_pid;
-PID Iq_pid;
-PID Id_pid;
 /**
  * @brief PID初始化
  * @param PID *pid,float Kp,float Ki,float Kd,float out_limit
@@ -22,23 +17,9 @@ void PID_Init(PID *pid,float Kp,float Ki,float Kd,float out_limit) {
     
     pid->out_limit = out_limit;
     
-    pid->integral_limit = pid->out_limit / (Ki+1.0f);//只在初始化与Ki绑定，之后修改
 	pid->firstPID = 1;
 }
-/**
- * @brief PID积分限幅设置
- * @param PID *pid
- * @return none
- * @attention 改变Ki后使用
- */
-void PID_Set_integral_limit(PID *pid) {
-    pid->integral_limit = pid->out_limit / (pid->Ki+1.0f);
-}
-/**
- * @brief PID设置
- * @param PID *pid,float Kp,float Ki,float Kd
- * @return none
- */
+
 void PID_Set(PID *pid,float Kp,float Ki,float Kd) {
     pid->Kp = Kp;
     pid->Ki = Ki;
@@ -65,27 +46,42 @@ float PID_Compute(PID *pid, float target, float input, float ts) {
         pid->prev_input = input;
     }
 
-    float i_term = pid->Ki * pid->integral;
-    float output = p_term + i_term + d_term;
+    if (pid->Ki == 0.0f){
+        pid->integral = 0.0f;
+        pid->output = p_term + d_term;
 
-    // 抗积分饱和
-    if ((output > pid->out_limit && error > 0) || (output < -pid->out_limit && error < 0)) {
-        //输出到上限，积分项不累加
-    } else {
-        pid->integral += error * ts;
+        if (pid->output > pid->out_limit)
+            pid->output = pid->out_limit;
+        if (pid->output < -pid->out_limit)
+            pid->output = -pid->out_limit;
 
-        if (pid->integral > pid->integral_limit)
-            pid->integral = pid->integral_limit;
-        if (pid->integral < -pid->integral_limit)
-            pid->integral = -pid->integral_limit;
+        return pid->output;
     }
 
-    // 输出限幅
-    if (output > pid->out_limit) output = pid->out_limit;
-    if (output < -pid->out_limit) output = -pid->out_limit;
+    pid->integral += pid->Ki * error * ts;
+    float output = p_term + pid->integral + d_term;
 
+    // 抗积分饱和
+    if(output > pid->out_limit){
+        output = pid->out_limit;
+        if(error < 0){
+            pid->integral = output - p_term - d_term;
+        }
+        else{
+            pid->integral -= pid->Ki * error * ts;
+        }
+    } 
+    else if(output < -pid->out_limit){
+        output = -pid->out_limit;
+        if(error > 0){
+            pid->integral = output - p_term - d_term;
+        }
+        else{
+            pid->integral -= pid->Ki * error * ts;
+        }
+    } 
     pid->output = output;
-    return output;
+    return pid->output;
 }
 /**
  * @brief PID复位

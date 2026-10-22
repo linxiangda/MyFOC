@@ -16,16 +16,15 @@ typedef enum {
 	No_error = 0,
     No_calibration = 1,
     DRV_error = 2,
-    CAN_Mode_Set_error = 3,
+    Mode_Set_error = 3,
 } Error_type;
+
 void Control(void);
+void Control_Loop(void);
 void Error_Check(void);
 void FOC_OpenOut(void);
 void FOC_CloseOut(void);
+void calibration(void);
+void Start_calibration(void);
 
-extern MOTOR_Mode motor_mode;
-extern Error_type error_type;
-extern uint8_t Calibration_flag;
-extern volatile uint8_t calibration_running;
-extern uint8_t Change_once;
 #endif

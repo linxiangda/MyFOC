@@ -12,14 +12,14 @@ typedef struct {
   float target_position;
   float target_velocity;
   float target_current;
-}FOC;
+  volatile uint8_t calibration_flag;//校准完成标志位
+  volatile uint8_t calibration_running;//校准中，不进入周期控制程序
+  volatile uint8_t change_once_set;//串口CAN改变运行模式时执行一次
+}FOCStruct;
 
-float electricalAngle(float angle);
-void Get_I(float angle_el);
-void setPhaseVoltage(float Uq,float Ud,float angle_el);
-void calibration(void);
+float electricalAngle(FOCStruct *FOC, float angle);
+void Get_I(FOCStruct *FOC, float angle_el);
+void setPhaseVoltage(FOCStruct *FOC, float Uq,float Ud,float angle_el);
 
-
-extern FOC foc;
 
 #endif
