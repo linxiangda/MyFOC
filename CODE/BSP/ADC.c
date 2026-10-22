@@ -26,7 +26,7 @@ void ADC0_Init(void){
 	adc_resolution_config(ADC0, ADC_RESOLUTION_12B);   //12位分辨率
 	adc_data_alignment_config(ADC0, ADC_DATAALIGN_RIGHT);  //数据右对齐
 
-	/* 规则组：母线电压 CH0，连续+DMA */
+	/* 规则组,母线电压CH0，连续+DMA */
 	adc_special_function_config(ADC0, ADC_SCAN_MODE, ENABLE);       //扫描模式，注入组用
 	adc_special_function_config(ADC0, ADC_CONTINUOUS_MODE, ENABLE); //连续模式
 	
@@ -35,7 +35,7 @@ void ADC0_Init(void){
     adc_external_trigger_source_config(ADC0, ADC_REGULAR_CHANNEL, ADC0_1_2_EXTTRIG_REGULAR_NONE);//软件触发
 	adc_external_trigger_config(ADC0, ADC_REGULAR_CHANNEL, ENABLE);
 	
-	/* 注入组：Ia(CH3)、Ib(CH2)，由 TIMER0_CH3 硬件触发 */
+	/* 注入组,Ia(CH3)、Ib(CH2)，由TIMER0_CH3硬件触发 */
 	adc_channel_length_config(ADC0, ADC_INSERTED_CHANNEL, 2);     //注入组采双通道
 	adc_inserted_channel_config(ADC0, 0, ADC_CHANNEL_3, ADC_SAMPLETIME_7POINT5);
 	adc_inserted_channel_config(ADC0, 1, ADC_CHANNEL_2, ADC_SAMPLETIME_7POINT5);
@@ -59,7 +59,7 @@ void ADC0_Init(void){
 	dma_channel_enable(DMA0, DMA_CH0);
 	adc_dma_mode_enable(ADC0);
 
-	/*ADC启动与校准*/
+	/* ADC启动与校准 */
 	adc_enable(ADC0);
 	delay_1ms(1);
 	adc_calibration_enable(ADC0);
