@@ -17,8 +17,8 @@
 #define RAD_TO_DEG (180.0f / _PI)
 
 /* -----------------------------电机宏定义---------------------------------- */
-#define MOTOR_LEG_WHEEL 1 //0为足，1为轮
-#define MOTOR_LEFT_RIGHT 1 //0为左，1为右
+#define MOTOR_LEG_WHEEL 0 //0为足，1为轮
+#define MOTOR_LEFT_RIGHT 0 //0为左，1为右
 #if MOTOR_LEG_WHEEL == 0
 /* GIM6010-8 */
 #if MOTOR_LEFT_RIGHT == 0
@@ -36,7 +36,7 @@
 #define G 8.0f //减速比
 #define POS_LIMIT_MAX (-0.05550147f) // -3.18°，伸腿端
 #define POS_LIMIT_MIN (-0.61749749f) // -35.38°，收腿端
-#define ControlID 0x102
+#define ControlID 0x103
 #endif
 
 #else
@@ -46,13 +46,13 @@
 #define DIR 1 //电机方向/编码器方向
 #define PP 10  //电机极对数
 #define G 1.0f //减速比
-#define ControlID 0x101
+#define ControlID 0x102
 #else
 //right
 #define DIR -1 //电机方向/编码器方向
 #define PP 10  //电机极对数
 #define G 1.0f //减速比
-#define ControlID 0x102
+#define ControlID 0x104
 #endif
 #endif
 

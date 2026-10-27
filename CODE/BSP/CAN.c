@@ -33,7 +33,7 @@ void CAN0_Init(void){
     CAN_Filter_StructInit.filter_bits = CAN_FILTERBITS_32BIT;
     CAN_Filter_StructInit.filter_list_high = (0x100) << 5;
     CAN_Filter_StructInit.filter_list_low = 0x0000;
-    CAN_Filter_StructInit.filter_mask_high = (0x7fc) << 5;
+    CAN_Filter_StructInit.filter_mask_high = (0x7f8) << 5;
     CAN_Filter_StructInit.filter_mask_low = 0x0006;
     CAN_Filter_StructInit.filter_enable = ENABLE;
     can_filter_init(&CAN_Filter_StructInit);

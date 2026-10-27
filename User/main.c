@@ -170,22 +170,16 @@ void Serial_Parse(char *str){
 }
 
 void CAN_Parse(uint8_t *data){
-    const uint8_t *order = &data[MOTOR_LEG_WHEEL * 4];
-    uint8_t mode = order[0];
+	uint32_t mode;
+	float controldata;
+    memcpy(&mode, &data[0], sizeof(mode));
+	memcpy(&controldata, &data[4], sizeof(controldata));
+
     if (mode > 4) {
         error_type = Mode_Set_error;
         return;
     }
-
-    int32_t raw = ((int32_t)order[1] << 16)
-            | ((int32_t)order[2] << 8)
-            |  (int32_t)order[3];
-			
-    if (raw & 0x00800000) {
-		raw -= 0x01000000;
-	}
-	float controldata = raw / 100000.0f;
-
+   
 	/* 关中断设置模式、数值 */
 	uint32_t primask = __get_PRIMASK();
 	__disable_irq();
@@ -254,8 +248,8 @@ void CAN_SendFeedback(void)
     memcpy(&data2[0], &position, 4);
     data2[4] = mode;
     data2[5] = error;
-    data2[6] = calibrated;
-    data2[7] = calibrating;
+    data2[6] = (calibrated << 1) | (calibrating);
+    data2[7] = 1;
 
     if (CAN0_TransmitData(0x201 + MOTOR_LEFT_RIGHT * 2 + MOTOR_LEG_WHEEL, data1, 8) == CAN_NOMAILBOX) {
         return;
