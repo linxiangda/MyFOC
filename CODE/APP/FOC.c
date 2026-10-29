@@ -40,11 +40,26 @@ void Get_I(FOCStruct *FOC, float angle_el){
  * @attention 根据Uq,Ud。判断扇区，计算T0、T1、T2，根据扇区计算Ta、Tb、Tc。
 			  从而计算Ua,Ub,Uc
  */
-void setPhaseVoltage(FOCStruct *FOC, float Uq, float Ud, float angle_el)
+void setPhaseVoltage(FOCStruct *FOC, float *Uq, float *Ud, float angle_el)
 {
+    /* 合成电压矢量限幅 */
+    float max_voltage =FOC->voltage_power_supply * 0.57735026919f * 0.95f;
+
+    if (!(max_voltage > 0.0f)) {
+        Pwm_DataReset();
+        return;
+    }
+    float voltage_sq = *Uq * *Uq + *Ud * *Ud;
+
+    if (voltage_sq > max_voltage * max_voltage) {
+        float scale = max_voltage / sqrtf(voltage_sq);
+        *Uq *= scale;
+        *Ud *= scale;
+    }
+
 	/* 逆 Park：dq -> alpha/beta */
-	float Ualpha = Ud * cosf(angle_el) - Uq * sinf(angle_el);
-	float Ubeta  = Ud * sinf(angle_el) + Uq * cosf(angle_el);
+	float Ualpha = *Ud * cosf(angle_el) - *Uq * sinf(angle_el);
+	float Ubeta  = *Ud * sinf(angle_el) + *Uq * cosf(angle_el);
 
 	/* 电压矢量幅值和角度 */
 	float magnitude = sqrtf(Ualpha * Ualpha + Ubeta * Ubeta);

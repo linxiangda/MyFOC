@@ -19,7 +19,7 @@ typedef struct {
 
 float electricalAngle(FOCStruct *FOC, float angle);
 void Get_I(FOCStruct *FOC, float angle_el);
-void setPhaseVoltage(FOCStruct *FOC, float Uq,float Ud,float angle_el);
+void setPhaseVoltage(FOCStruct *FOC, float *Uq,float *Ud,float angle_el);
 
 
 #endif

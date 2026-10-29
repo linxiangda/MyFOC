@@ -18,7 +18,7 @@
 
 /* -----------------------------电机宏定义---------------------------------- */
 #define MOTOR_LEG_WHEEL 0 //0为足，1为轮
-#define MOTOR_LEFT_RIGHT 0 //0为左，1为右
+#define MOTOR_LEFT_RIGHT 1 //0为左，1为右
 #if MOTOR_LEG_WHEEL == 0
 /* GIM6010-8 */
 #if MOTOR_LEFT_RIGHT == 0

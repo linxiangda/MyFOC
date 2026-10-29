@@ -5,8 +5,12 @@
 #include "Serial.h"
 #include "FOC.h"
 #include "AS5047P.h"
+#include "PID.h"
+#include "Control.h"
 #include "Mydef.h"
 extern FOCStruct foc;
+extern PID Iq_pid;
+extern PID Id_pid;
 extern AS5047P as5047p;
 /**
  * @brief 转换参数为VOFAjustFloat格式发送
@@ -56,7 +60,7 @@ void sendFireWater(void){
     #endif
     len = snprintf(
             packet, sizeof(packet),
-            "%.6f,%.6f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
+            "%.6f,%.6f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
             foc.target_position,
             position_show,
             foc.target_velocity,
@@ -64,7 +68,9 @@ void sendFireWater(void){
             foc.target_current,
             foc.Iq,
             0.0f,
-            foc.Id
+            foc.Id,
+            Iq_pid.output,
+            Id_pid.output
         );
 
     if (len > 0 && (size_t)len < sizeof(packet)){

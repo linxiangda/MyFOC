@@ -57,19 +57,19 @@ int main(void){
 	DRV8323_Init();//驱动芯片初始化，使用SPI1
 	ADC0_Init();//ADC0初始化
 	
-	//PID初始化
+	//PID初始化,iq,id还要对合成矢量限幅
 	#if MOTOR_LEG_WHEEL == 0
 		/* GIM6010-8：腿电机 */
 		PID_Init(&position_pid, 10.0f, 0.0f, 0.1f, 80.0f);
 		PID_Init(&velocity_pid, 0.1f, 0.3f, 0.0f, 8.0f);
-		PID_Init(&Iq_pid,       2.0f, 10.0f, 0.0f, 12.0f);
-		PID_Init(&Id_pid,       2.0f, 10.0f, 0.0f, 12.0f);//单电机最大功率在3/2*12*8=144W左右
+		PID_Init(&Iq_pid,       2.0f, 10.0f, 0.0f, 13.16f);
+		PID_Init(&Id_pid,       2.0f, 10.0f, 0.0f, 13.16f);//单电机最大功率在3/2*12*8=144W左右
 	#else
 		/* M0603A_111：轮电机 */
 		PID_Init(&position_pid, 10.0f, 0.0f, 0.1f, 80.0f);
-		PID_Init(&velocity_pid, 0.05f, 1.5f, 0.0f, 8.0f);
-		PID_Init(&Iq_pid,       10.0f, 30.0f, 0.0f, 12.0f);
-		PID_Init(&Id_pid,       10.0f, 30.0f, 0.0f, 12.0f);
+		PID_Init(&velocity_pid, 0.05f, 1.5f, 0.0f, 1.0f);
+		PID_Init(&Iq_pid,       10.0f, 60.0f, 0.0f, 13.16f);
+		PID_Init(&Id_pid,       10.0f, 60.0f, 0.0f, 13.16f);
 	#endif
 	
 	
@@ -92,7 +92,7 @@ int main(void){
 		if(time_main >= 20){//20ms执行
 			time_main = 0;
 			if(motor_mode != Motor_MODE_NONE && motor_mode != Motor_MODE_FAULT){
-				// sendJustFloatPacket();//vofa发送程序，在闭环情况下发送,稍微费时
+				// sendJustFloatPacket();//vofa发送程序，在闭环情况下发送
 				sendFireWater();
 			}
 			Error_Check();//错误检测，不费时
