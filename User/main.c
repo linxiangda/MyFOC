@@ -188,7 +188,7 @@ void CAN_Parse(uint8_t *data){
 		motor_mode = (MOTOR_Mode)mode;
         foc.change_once_set = 1;//改一次模式，执行一次FOC_CloseOut()/FOC_OpenOut()
     }
-	    if(motor_mode == Motor_MODE_C){
+	if(motor_mode == Motor_MODE_C){
         foc.target_current=controldata;
         foc.target_velocity=0;
         foc.target_position=0;  
@@ -207,6 +207,44 @@ void CAN_Parse(uint8_t *data){
 	__DMB();
 	__set_PRIMASK(primask);
     
+}
+float uint_to_float(uint16_t x_int, float x_min, float x_max, uint8_t bits){
+	float span = x_max - x_min;
+	float max_int = (float)((1 << bits) - 1);
+	if(max_int < 1.0f) return x_min;
+	return ((float)x_int / max_int) * span + x_min;
+}
+void CAN_Parse_MIT(uint8_t *data){
+	uint64_t pack;
+	memcpy(&pack, data, 8);
+    uint16_t p_int   = (uint16_t)((pack >> 48) & 0xFFFF);
+    uint16_t v_int   = (uint16_t)((pack >> 36) & 0x0FFF);
+    uint16_t kp_int  = (uint16_t)((pack >> 24) & 0x0FFF);
+    uint16_t kd_int  = (uint16_t)((pack >> 12) & 0x0FFF);
+    uint16_t tff_int = (uint16_t)(pack & 0x0FFF);
+
+    float p_set   = uint_to_float(p_int,   -12.5f, 12.5f, 16);
+    float v_set   = uint_to_float(v_int,   -45.0f, 45.0f, 12);
+    float kp  = uint_to_float(kp_int,    0.0f, 500.0f, 12);
+    float kd  = uint_to_float(kd_int,    0.0f, 5.0f,   12);
+    float tff = uint_to_float(tff_int, -18.0f, 18.0f, 12);
+   
+	/* 关中断设置模式、数值 */
+	uint32_t primask = __get_PRIMASK();
+	__disable_irq();
+
+    if (motor_mode != (MOTOR_Mode)Motor_MODE_MIT) {
+		motor_mode = (MOTOR_Mode)Motor_MODE_MIT;
+        foc.change_once_set = 1;//改一次模式，执行一次FOC_CloseOut()/FOC_OpenOut()
+    }
+	foc.mit_target_position = p_set;
+	foc.mit_target_velocity = v_set;
+	foc.mit_kp = kp;
+	foc.mit_kd = kd;
+	foc.mit_tff = tff;
+
+	__DMB();
+	__set_PRIMASK(primask);
 }
 
 void CAN_SendFeedback(void)
@@ -236,10 +274,11 @@ void CAN_SendFeedback(void)
     __DMB();
     __set_PRIMASK(primask);
 
-    velocity = -(velocity / G * DIR);
+    velocity = velocity / G * DIR;
     position = position / G * DIR;
 	#if MOTOR_LEG_WHEEL == 0
 		position = LEG_EXTEND_SIGN * (position - LEG_RETRACT_POS_RAD);
+		velocity = LEG_EXTEND_SIGN * velocity;
 	#endif
 
     memcpy(&data1[0], &iq,       4);

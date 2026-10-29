@@ -32,7 +32,39 @@ AS5047P as5047p = {
 };
 volatile MOTOR_Mode motor_mode = Motor_MODE_NONE;
 Error_type error_type = No_error;
-
+/**
+ * @brief MIT模式
+ * @param none
+ * @return none
+ * @attention none
+ */
+void MIT_current_loop(void){
+	float position = as5047p.angle_revolution / G * DIR;
+	float velocity = as5047p.velocity / G * DIR;
+	#if MOTOR_LEG_WHEEL == 0
+		position = LEG_EXTEND_SIGN * (position - LEG_RETRACT_POS_RAD);
+		velocity = LEG_EXTEND_SIGN * velocity ;
+		if(foc.mit_target_position > LEG_TRAVEL_RAD) foc.mit_target_position = LEG_TRAVEL_RAD;
+		if(foc.mit_target_position < 0.0f) foc.mit_target_position = 0.0f;
+	#endif
+	float current_set = foc.mit_kp*(foc.mit_target_position - position)
+						+ foc.mit_kd*(foc.mit_target_velocity - velocity)
+						+ foc.mit_tff;
+	if(current_set > 8.0f) current_set = 8;
+	if(current_set < -8.0f) current_set = -8;
+	#if MOTOR_LEG_WHEEL == 0
+		current_set *= LEG_EXTEND_SIGN;
+	#endif
+	PID_Compute(&Iq_pid,current_set,foc.Iq,Ts_currentLoop);
+	PID_Compute(&Id_pid,0,foc.Id,Ts_currentLoop);
+	/* 保存合成限幅前的输出 */
+    float uq_before = Iq_pid.output;
+    float ud_before = Id_pid.output;
+	setPhaseVoltage(&foc,&Iq_pid.output,&Id_pid.output,foc.electric_angle);
+    /* 将合成限幅产生的差值反馈给积分项 */
+    if (Iq_pid.Ki > 0.0f) Iq_pid.integral += Iq_pid.output - uq_before;
+    if (Id_pid.Ki > 0.0f) Id_pid.integral += Id_pid.output - ud_before;
+}
 /**
  * @brief 电流环
  * @param none
@@ -149,6 +181,23 @@ void Control(void){
 					PID_Reset(&Id_pid);
 				}
 				current_loop();
+			}
+			else{
+				error_type = No_calibration;
+			}
+			break;
+		}
+		case Motor_MODE_MIT:{
+			if(foc.calibration_flag == 1){
+				if(foc.change_once_set == 1){
+					FOC_OpenOut();
+					foc.change_once_set = 0;
+					PID_Reset(&position_pid);//改一次模式 PID复位
+					PID_Reset(&velocity_pid);
+					PID_Reset(&Iq_pid);
+					PID_Reset(&Id_pid);
+				}
+				MIT_current_loop();
 			}
 			else{
 				error_type = No_calibration;

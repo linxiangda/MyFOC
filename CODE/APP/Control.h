@@ -9,6 +9,7 @@ typedef enum {
 	Motor_MODE_V = 2,
 	Motor_MODE_P = 3,
     Motor_MODE_Calibration = 4,
+    Motor_MODE_MIT = 5,
     Motor_MODE_FAULT = -1,
 } MOTOR_Mode;
 

@@ -4,6 +4,7 @@
 
 can_receive_message_struct CAN0_receive_message;
 extern void CAN_Parse(uint8_t *data);
+extern void CAN_Parse_MIT(uint8_t *data);
 /**
  * @brief CAN0≥ı ºªØ
  */
@@ -33,7 +34,7 @@ void CAN0_Init(void){
     CAN_Filter_StructInit.filter_bits = CAN_FILTERBITS_32BIT;
     CAN_Filter_StructInit.filter_list_high = (0x100) << 5;
     CAN_Filter_StructInit.filter_list_low = 0x0000;
-    CAN_Filter_StructInit.filter_mask_high = (0x7f8) << 5;
+    CAN_Filter_StructInit.filter_mask_high = (0x7e8) << 5;
     CAN_Filter_StructInit.filter_mask_low = 0x0006;
     CAN_Filter_StructInit.filter_enable = ENABLE;
     can_filter_init(&CAN_Filter_StructInit);
@@ -99,6 +100,14 @@ void USBD_LP_CAN0_RX0_IRQHandler(void){
             uint8_t data[8]={0};
             memcpy(data,CAN0_receive_message.rx_data,CAN0_receive_message.rx_dlen);
             CAN_Parse(data);
+        }
+
+        if(CAN0_receive_message.rx_ff == CAN_FF_STANDARD && CAN0_receive_message.rx_ft == CAN_FT_DATA &&
+            CAN0_receive_message.rx_sfid == (ControlID + 0x010) && CAN0_receive_message.rx_dlen == 8 && CAN0_receive_message.rx_fi == 0
+        ){
+            uint8_t data[8]={0};
+            memcpy(data,CAN0_receive_message.rx_data,CAN0_receive_message.rx_dlen);
+            CAN_Parse_MIT(data);
         }
         
     }

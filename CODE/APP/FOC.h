@@ -12,6 +12,13 @@ typedef struct {
   float target_position;
   float target_velocity;
   float target_current;
+
+  float mit_target_position;
+  float mit_target_velocity;
+  float mit_kp;
+  float mit_kd;
+  float mit_tff;
+  
   volatile uint8_t calibration_flag;//校准完成标志位
   volatile uint8_t calibration_running;//校准中，不进入周期控制程序
   volatile uint8_t change_once_set;//串口CAN改变运行模式时执行一次
